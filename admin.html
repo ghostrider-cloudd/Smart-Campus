@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Panel – Smart Campus</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f3f4f6;
+    }
+  </style>
+</head>
+
+<body class="text-gray-800">
+
+<!-- 🔐 PASSWORD MODAL -->
+<div id="passwordModal"
+  class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+
+  <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm text-center">
+    <h2 class="text-xl font-bold mb-4">🔒 Admin Access</h2>
+
+    <input
+      id="passwordInput"
+      type="password"
+      placeholder="Enter password"
+      class="w-full border px-4 py-2 rounded mb-3"
+    />
+
+    <p id="errorText" class="text-red-500 text-sm hidden mb-3">
+      Incorrect password
+    </p>
+
+    <button
+      onclick="checkPassword()"
+      class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded w-full">
+      Unlock
+    </button>
+  </div>
+</div>
+
+<!-- 🔒 PROTECTED CONTENT -->
+<div id="protectedContent" class="hidden">
+
+<div class="flex h-screen overflow-hidden">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="w-64 bg-gray-900 text-white flex flex-col">
+    <div class="h-20 flex items-center justify-center border-b border-gray-700">
+      <i class="fas fa-graduation-cap text-2xl text-indigo-400 mr-3"></i>
+      <h1 class="text-xl font-bold">VertexMind</h1>
+    </div>
+
+    <p class="text-xs text-gray-400 text-center px-4 mt-2">
+      AI-Powered Campus Automation Platform
+    </p>
+
+    <nav class="flex-1 px-4 py-6 space-y-2">
+      <a href="index.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-home w-6 mr-3"></i> Dashboard
+      </a>
+
+      <a href="ai-assistant.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-book-open w-6 mr-3"></i> AI Academic Assistant
+      </a>
+
+      <a href="chatbot.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-robot w-6 mr-3"></i> BuddyAI
+      </a>
+
+      <a href="events.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-calendar-check w-6 mr-3"></i> Event Management
+      </a>
+
+      <a href="attendance.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-face-smile w-6 mr-3"></i> Facial Attendance
+      </a>
+
+      <a href="projects.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-diagram-project w-6 mr-3"></i> Project Repository
+      </a>
+      <a href="campus-navigation.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+          <i class="fas fa-user-shield w-6 mr-3"></i> Campus navigation
+        </a>
+
+      <div class="pt-4 mt-4 border-t border-gray-700 space-y-2">
+        <a href="profile.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+          <i class="fas fa-user w-6 mr-3"></i> Profile
+        </a>
+
+        <a href="admin.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+          <i class="fas fa-user-shield w-6 mr-3"></i> Admin Panel
+        </a>
+        
+      </div>
+    </nav>
+  </aside>
+
+  <!-- ================= MAIN CONTENT ================= -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="h-20 bg-white border-b flex items-center justify-between px-8 shadow-sm">
+      <h2 class="text-2xl font-bold">Admin Panel</h2>
+
+      <div class="flex items-center gap-6">
+        <span class="text-sm text-gray-500">Welcome, Admin</span>
+        <button
+          onclick="logout()"
+          class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">
+          <i class="fas fa-sign-out-alt"></i>
+          Logout
+        </button>
+      </div>
+    </header>
+
+    <!-- ================= PAGE CONTENT ================= -->
+    <main class="flex-1 overflow-y-auto bg-gray-100 p-8">
+
+      <h1 class="text-3xl font-bold mb-6">Admin Panel – Database View</h1>
+
+      <!-- ================= EVENTS TABLE ================= -->
+      <section class="mb-10 bg-white p-6 rounded-2xl shadow">
+        <h2 class="text-xl font-semibold mb-3">📅 Events</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-200">
+              <tr>
+                <th class="p-3 text-left">Title</th>
+                <th class="p-3">Date</th>
+                <th class="p-3">Location</th>
+                <th class="p-3">Registered</th>
+                <th class="p-3">Action</th>
+              </tr>
+            </thead>
+            <tbody id="eventsTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================= PROJECTS TABLE ================= -->
+      <section class="mb-10 bg-white p-6 rounded-2xl shadow">
+        <h2 class="text-xl font-semibold mb-3">📁 Projects</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-200">
+              <tr>
+                <th class="p-3 text-left">Title</th>
+                <th class="p-3">Department</th>
+                <th class="p-3">Owner (USN)</th>
+                <th class="p-3">Action</th>
+              </tr>
+            </thead>
+            <tbody id="projectsTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================= PROFILES TABLE ================= -->
+      <section class="bg-white p-6 rounded-2xl shadow">
+        <h2 class="text-xl font-semibold mb-3">👤 Student Profiles</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-200">
+              <tr>
+                <th class="p-3 text-left">Name</th>
+                <th class="p-3">Email</th>
+                <th class="p-3">USN</th>
+                <th class="p-3">Action</th>
+              </tr>
+            </thead>
+            <tbody id="profilesTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="bg-white text-center p-4 text-sm text-gray-500 border-t">
+      © VertexMind The Smart Campus AI Platform
+    </footer>
+
+  </div>
+</div>
+</div>
+
+<!-- ================= MODAL (UNCHANGED) ================= -->
+<div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+  <div class="bg-white max-w-2xl w-full rounded-lg p-6 relative">
+    <button onclick="closeModal()" class="absolute top-2 right-3 text-gray-600 text-lg">✖</button>
+    <h3 class="text-xl font-bold mb-4">📄 Detailed Access</h3>
+    <div id="modalContent" class="overflow-auto max-h-[400px]"></div>
+  </div>
+</div>
+
+<!-- ================= YOUR FIREBASE SCRIPT (UNCHANGED) ================= -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs } from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* 🔹 Firebase Config */
+const app = initializeApp({
+  apiKey: "AIzaSyBULYCPooqlOpOneu6b4wa3MhJx-igeBWU",
+  authDomain: "hck-sprint.firebaseapp.com",
+  projectId: "hck-sprint"
+});
+
+const db = getFirestore(app);
+
+/* ================= LOAD ALL ================= */
+loadAll();
+
+function loadAll() {
+  loadEvents();
+  loadProjects();
+  loadProfiles();
+}
+
+/* ================= EVENTS ================= */
+async function loadEvents() {
+  const table = document.getElementById("eventsTable");
+  table.innerHTML = "";
+
+  const snap = await getDocs(
+    collection(db, "Users", "events", "items")
+  );
+
+  if (snap.empty) {
+    table.innerHTML = `
+      <tr>
+        <td colspan="5" class="p-4 text-center text-gray-500">
+          No events found
+        </td>
+      </tr>`;
+    return;
+  }
+
+  snap.forEach(doc => {
+    const e = doc.data();
+    table.innerHTML += `
+      <tr class="border-t">
+        <td class="p-3">${e.title}</td>
+        <td class="p-3">${e.date}</td>
+        <td class="p-3">${e.location}</td>
+        <td class="p-3">${e.participantsCount || 0}</td>
+        <td class="p-3">
+          <button onclick='viewData(${JSON.stringify(e)})'
+            class="text-indigo-600 font-semibold">
+            View
+          </button>
+        </td>
+      </tr>`;
+  });
+}
+
+/* ================= PROJECTS ================= */
+async function loadProjects() {
+  const table = document.getElementById("projectsTable");
+  table.innerHTML = "";
+
+  const snap = await getDocs(
+    collection(db, "Users", "Projects", "items")
+  );
+
+  if (snap.empty) {
+    table.innerHTML = `
+      <tr>
+        <td colspan="4" class="p-4 text-center text-gray-500">
+          No projects found
+        </td>
+      </tr>`;
+    return;
+  }
+
+  snap.forEach(doc => {
+    const p = doc.data();
+    table.innerHTML += `
+      <tr class="border-t">
+        <td class="p-3">${p.title}</td>
+        <td class="p-3">${p.department || "-"}</td>
+        <td class="p-3">${doc.id}</td>
+        <td class="p-3">
+          <button onclick='viewData(${JSON.stringify(p)})'
+            class="text-indigo-600 font-semibold">
+            View
+          </button>
+        </td>
+      </tr>`;
+  });
+}
+
+/* ================= PROFILES ================= */
+async function loadProfiles() {
+  const table = document.getElementById("profilesTable");
+  table.innerHTML = "";
+
+  const snap = await getDocs(
+    collection(db, "Users", "profile data", "students")
+  );
+
+  if (snap.empty) {
+    table.innerHTML = `
+      <tr>
+        <td colspan="4" class="p-4 text-center text-gray-500">
+          No profiles found
+        </td>
+      </tr>`;
+    return;
+  }
+
+  snap.forEach(doc => {
+    const p = doc.data();
+    table.innerHTML += `
+      <tr class="border-t">
+        <td class="p-3">${p.name}</td>
+        <td class="p-3">${p.email}</td>
+        <td class="p-3">${p.roll}</td>
+        <td class="p-3">
+          <button onclick='viewData(${JSON.stringify(p)})'
+            class="text-indigo-600 font-semibold">
+            View
+          </button>
+        </td>
+      </tr>`;
+  });
+}
+
+
+function formatValue(value) {
+
+  // 🔹 Firestore Timestamp
+  if (value?.seconds) {
+    return new Date(value.seconds * 1000).toLocaleString();
+  }
+
+  // 🔹 Array (tags, registeredUsers[])
+  if (Array.isArray(value)) {
+    if (value.length === 0) return "—";
+
+    // If array of registered users → show names only
+    if (value[0]?.name) {
+      return `
+        <ul class="list-disc pl-5">
+          ${value.map(u => `<li>${u.name}</li>`).join("")}
+        </ul>
+      `;
+    }
+
+    return `
+      <ul class="list-disc pl-5">
+        ${value.map(v => `<li>${formatValue(v)}</li>`).join("")}
+      </ul>
+    `;
+  }
+
+  // 🔹 Single registeredUsers object → show name only
+  if (typeof value === "object" && value !== null) {
+
+    // registeredUsers object
+    if ("name" in value) {
+      return value.name;
+    }
+
+    // coordinates
+    if ("lat" in value && "lng" in value) {
+      return `
+        <div>
+          <div><strong>Latitude:</strong> ${value.lat}</div>
+          <div><strong>Longitude:</strong> ${value.lng}</div>
+        </div>
+      `;
+    }
+
+    // fallback for other objects
+    return `
+      <pre class="bg-gray-100 p-2 rounded text-sm overflow-auto">
+${JSON.stringify(value, null, 2)}
+      </pre>
+    `;
+  }
+
+  // 🔹 Primitive
+  return value;
+}
+
+
+
+/* ================= PROFESSIONAL MODAL VIEW ================= */
+window.viewData = (data) => {
+  const fieldOrder = [
+    { key: "title", label: "Title" },
+    { key: "description", label: "Description" },
+    { key: "date", label: "Date" },
+    { key: "time", label: "Time" },
+    { key: "location", label: "Location" },
+    { key: "department", label: "Department" },
+    { key: "participantsCount", label: "Registered Participants" },
+    { key: "name", label: "Name" },
+    { key: "email", label: "Email" },
+    { key: "roll", label: "USN / Roll Number" }
+  ];
+
+  let html = `
+    <table class="w-full max-w-xl mx-auto border border-gray-300 rounded-lg">
+      <tbody>
+  `;
+
+  // Ordered fields
+  fieldOrder.forEach(field => {
+    if (data[field.key] !== undefined) {
+      html += `
+        <tr class="border-b">
+          <td class="p-3 font-semibold bg-gray-100 w-1/3">${field.label}</td>
+          <td class="p-3">${formatValue(data[field.key])}</td>
+        </tr>`;
+    }
+  });
+
+  // Remaining fields
+  for (const key in data) {
+    if (!fieldOrder.some(f => f.key === key)) {
+      html += `
+        <tr class="border-b">
+          <td class="p-3 font-semibold bg-gray-100 w-1/3">${key}</td>
+          <td class="p-3">${formatValue(data[key])}</td>
+        </tr>`;
+    }
+  }
+
+  html += `
+      </tbody>
+    </table>
+  `;
+
+  document.getElementById("modalContent").innerHTML = html;
+  document.getElementById("modal").classList.remove("hidden");
+};
+
+window.closeModal = () => {
+  document.getElementById("modal").classList.add("hidden");
+};
+</script>
+
+<!-- ================= PASSWORD + LOGOUT SCRIPT ================= -->
+<script>
+  const ADMIN_PASSWORD = "ABC123";
+
+  function checkPassword() {
+    const input = document.getElementById("passwordInput").value;
+    const error = document.getElementById("errorText");
+
+    if (input === ADMIN_PASSWORD) {
+      document.getElementById("passwordModal").classList.add("hidden");
+      document.getElementById("protectedContent").classList.remove("hidden");
+    } else {
+      error.classList.remove("hidden");
+    }
+  }
+
+  function logout() {
+    window.location.href = "auth.html";
+  }
+
+  document.getElementById("passwordInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") checkPassword();
+  });
+</script>
+
+</body>
+</html>

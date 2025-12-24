@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Academic Assistant</title>
+
+<!-- UI -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- PDF & DOCX SUPPORT -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.30/mammoth.browser.min.js"></script>
+
+<style>
+body{
+  font-family:'Inter',sans-serif;
+  background:#f3f4f6;
+}
+</style>
+</head>
+
+<body>
+
+<div class="flex h-screen overflow-hidden">
+
+<!-- SIDEBAR -->
+<aside class="w-64 bg-gray-900 text-white flex flex-col">
+    <div class="h-20 flex items-center justify-center border-b border-gray-700">
+      <i class="fas fa-graduation-cap text-2xl text-indigo-400 mr-3"></i>
+      <h1 class="text-xl font-bold">VertexMind</h1>
+    </div>
+
+    <p class="text-xs text-gray-400 text-center px-4 mt-2">
+      AI-Powered Campus Automation Platform
+    </p>
+
+    <nav class="flex-1 px-4 py-6 space-y-2">
+
+      <a href="index.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-home w-6 mr-3"></i> Dashboard
+      </a>
+
+      <a href="ai-assistant.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-book-open w-6 mr-3"></i> AI Academic Assistant
+      </a>
+
+      <a href="chatbot.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-robot w-6 mr-3"></i> BuddyAI
+      </a>
+
+      <a href="events.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-calendar-check w-6 mr-3"></i> Event Management
+      </a>
+
+      <a href="attendance.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-face-smile w-6 mr-3"></i> Facial Attendance
+      </a>
+
+      <a href="projects.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-diagram-project w-6 mr-3"></i> Project Repository
+      </a>
+      <a href="campus-navigation.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+          <i class="fas fa-user-shield w-6 mr-3"></i> Campus navigation
+        </a>
+
+      <div class="pt-4 mt-4 border-t border-gray-700 space-y-2">
+        <a href="profile.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+          <i class="fas fa-user w-6 mr-3"></i> Profile
+        </a>
+
+        <a href="admin.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+          <i class="fas fa-user-shield w-6 mr-3"></i> Admin Panel
+        </a>
+      </div>
+
+    </nav>
+  </aside>
+
+<!-- MAIN -->
+<div class="flex-1 flex flex-col overflow-hidden">
+
+<header class="h-20 bg-white border-b shadow-sm px-8 flex items-center justify-between">
+  <div>
+    <h2 class="text-2xl font-bold">AI Academic Assistant</h2>
+    <p class="text-sm text-gray-500">
+      Welcome, <span id="userName">User</span>
+    </p>
+  </div>
+
+  <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">
+    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+  </button>
+</header>
+
+
+<main class="flex-1 grid grid-cols-1 lg:grid-cols-2 overflow-hidden">
+
+<!-- LEFT PANEL -->
+<section class="bg-white border-r p-6 space-y-6 overflow-y-auto">
+
+  <h3 class="text-xl font-bold flex items-center gap-2">
+    <i class="fas fa-upload text-indigo-600"></i> Upload Study Material
+  </h3>
+
+  <input id="fileInput" type="file" accept=".txt,.pdf,.docx"
+    class="w-full border p-3 rounded-lg">
+
+  <textarea id="textInput"
+    class="w-full border p-4 rounded-lg h-56"
+    placeholder="Or paste your notes / textbook content here..."></textarea>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <button onclick="generate('summary')" class="bg-indigo-600 text-white py-3 rounded-lg">Generate Summary</button>
+    <button onclick="generate('keypoints')" class="bg-green-600 text-white py-3 rounded-lg">Key Points</button>
+    <button onclick="generate('questions')" class="bg-gray-800 text-white py-3 rounded-lg">Practice Questions</button>
+    <button onclick="generate('simplify')" class="bg-purple-600 text-white py-3 rounded-lg">Simplify Topic</button>
+  </div>
+</section>
+
+<!-- RIGHT PANEL -->
+<section class="bg-gray-100 p-6 overflow-y-auto">
+  <h3 class="text-xl font-bold mb-4">
+    <i class="fas fa-robot text-indigo-600 mr-2"></i> AI Study Output
+  </h3>
+
+  <div id="output"
+    class="bg-white rounded-2xl shadow p-6 min-h-[300px] max-h-[60vh]
+           overflow-y-auto leading-loose text-gray-900 text-[15px]">
+
+    <p class="text-gray-500 italic">
+      Upload a document or paste text, then select an option.
+    </p>
+
+  </div>
+</section>
+
+</main>
+
+<footer class="bg-white text-center p-3 text-sm text-gray-500 border-t">
+  © VertexMind The Smart Campus AI Platform
+</footer>
+
+</div>
+</div>
+
+<script>
+/* ===== CONFIG ===== */
+const API_KEY = "AIzaSyBEufZ1WrBKK09KnHVnpxsYL7aV1RR1Mjg";
+const MODEL = "gemini-2.5-flash-lite";
+let uploadedText = "";
+
+/* ===== MARKDOWN → HTML (BOLD FIX) ===== */
+function formatAIText(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\n/g, "<br>");
+}
+
+/* ===== FILE HANDLER ===== */
+document.getElementById("fileInput").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const ext = file.name.split(".").pop().toLowerCase();
+  uploadedText = "";
+
+  try {
+    if (ext === "txt") {
+      uploadedText = await file.text();
+    }
+    else if (ext === "pdf") {
+      const buffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+      let text = "";
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        text += content.items.map(i => i.str).join(" ") + "\n";
+      }
+      uploadedText = text;
+    }
+    else if (ext === "docx") {
+      const buffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+      uploadedText = result.value;
+    }
+  } catch (err) {
+    alert("Error reading file");
+    console.error(err);
+  }
+});
+
+/* ===== PROMPT ===== */
+function buildPrompt(type, text) {
+  const tasks = {
+    summary: "Summarize the document.",
+    keypoints: "Extract important key points.",
+    questions: "Generate exam-oriented questions.",
+    simplify: "Explain the content in very simple terms."
+  };
+
+  return `
+You are an academic assistant for engineering students.
+Use ONLY the document content below.
+Explain in short, simple, and easy-to-understand language.
+
+Task: ${tasks[type]}
+
+Document:
+${text}
+`;
+}
+
+/* ===== GENERATE ===== */
+async function generate(type) {
+  const output = document.getElementById("output");
+  const content = uploadedText.trim() || document.getElementById("textInput").value.trim();
+
+  if (!content) {
+    output.innerHTML = "<p class='text-red-500'>Upload a document or paste text.</p>";
+    return;
+  }
+
+  output.innerHTML = "<p class='italic text-gray-500'>Processing...</p>";
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1/models/${MODEL}:generateContent?key=${API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: buildPrompt(type, content) }] }],
+          generationConfig: { temperature: 0.2 }
+        })
+      }
+    );
+
+    const data = await res.json();
+    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "No output.";
+
+    output.innerHTML = `<div>${formatAIText(reply)}</div>`;
+    output.scrollTop = 0;
+
+  } catch {
+    output.innerHTML = "<p class='text-red-600'>Error generating content.</p>";
+  }
+}
+
+/* ===== LOGOUT ===== */
+function logout(){
+  localStorage.clear();
+  window.location.href="auth.html";
+}
+
+
+// ===== USER NAME =====
+const storedUserName = localStorage.getItem("userName");
+const userNameElement = document.getElementById("userName");
+
+if (storedUserName && userNameElement) {
+  userNameElement.innerText = storedUserName;
+}
+
+</script>
+
+</body>
+</html>

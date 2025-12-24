@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projects</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+body { font-family: 'Inter', sans-serif; background:#f3f4f6; }
+.modal { background: rgba(0,0,0,0.5); }
+</style>
+</head>
+
+<body>
+
+<div class="flex h-screen">
+
+<!-- SIDEBAR -->
+<aside class="w-64 bg-gray-900 text-white flex flex-col">
+    <div class="h-20 flex items-center justify-center border-b border-gray-700">
+      <i class="fas fa-graduation-cap text-2xl text-indigo-400 mr-3"></i>
+      <h1 class="text-xl font-bold">VertexMind</h1>
+    </div>
+    <p class="text-xs text-gray-400 text-center px-4 mt-2">
+      VertexMind The Smart Campus AI Platform
+    </p>
+    <nav class="flex-1 px-4 py-6 space-y-2">
+      <a href="index.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-home w-6 mr-3"></i> Dashboard
+      </a>
+      <a href="ai-assistant.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-book-open w-6 mr-3"></i> AI Academic Assistant
+      </a>
+      <a href="chatbot.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-robot w-6 mr-3"></i> BuddyAI
+      </a>
+      <a href="events.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-calendar-check w-6 mr-3"></i> Event Management
+      </a>
+      <a href="attendance.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-face-smile w-6 mr-3"></i> Facial Attendance
+      </a>
+      <a href="projects.html" class="nav-link flex items-center px-4 py-3 rounded-lg bg-gray-800">
+        <i class="fas fa-diagram-project w-6 mr-3"></i> Project Repository
+      </a>
+      <a href="campus-navigation.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-user-shield w-6 mr-3"></i> Campus navigation
+      </a>
+    </nav>
+</aside>
+
+<!-- MAIN -->
+<div class="flex-1 flex flex-col">
+
+<header class="h-20 bg-white border-b shadow-sm px-8 flex items-center justify-between">
+  <div>
+    <h2 class="text-2xl font-bold">Student Projects</h2>
+    <p class="text-sm text-gray-500">
+      Welcome, <span id="userName">User</span>
+    </p>
+  </div>
+  <button onclick="openModal()"
+    class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg">
+    <i class="fas fa-plus mr-2"></i>Add / Edit Project
+  </button>
+</header>
+
+<!-- SEARCH BAR -->
+<div class="bg-white px-8 py-4 border-b">
+  <div class="relative max-w-xl">
+    <i class="fas fa-search absolute left-4 top-3 text-gray-400"></i>
+    <input id="searchInput"
+      placeholder="Search by keywords, title, domain, AI tags..."
+      class="w-full pl-12 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+  </div>
+</div>
+
+<main id="projectsContainer" class="flex-1 p-8 space-y-6 overflow-y-auto"></main>
+
+<footer class="bg-white text-center p-4 text-sm text-gray-500 border-t">
+© VertexMind The Smart Campus AI Platform
+</footer>
+
+</div>
+</div>
+
+<!-- MODAL -->
+<div id="projectModal" class="fixed inset-0 hidden modal flex items-center justify-center">
+  <div class="bg-white rounded-xl w-full max-w-xl p-6 space-y-4">
+    <input id="pUSN" placeholder="Student USN" class="w-full border p-3 rounded">
+    <input id="pTitle" placeholder="Project Title" class="w-full border p-3 rounded">
+    <textarea id="pDesc" placeholder="Description" class="w-full border p-3 rounded"></textarea>
+
+    <input id="pDemo" placeholder="Demo Link (https://...)" class="w-full border p-3 rounded">
+    <input id="pReportLink" placeholder="Google Drive PDF URL" class="w-full border p-3 rounded">
+
+    <select id="pDept" class="w-full border p-3 rounded">
+      <option value="">Department</option>
+      <option>CSE</option>
+      <option>ISE</option>
+      <option>ECE</option>
+      <option>EEE</option>
+      <option>ME</option>
+    </select>
+
+    <select id="pType" class="w-full border p-3 rounded">
+      <option value="">Project Type</option>
+      <option>Mini Project</option>
+      <option>Major Project</option>
+      <option>Research</option>
+      <option>Hackathon</option>
+    </select>
+
+    <select id="pStage" class="w-full border p-3 rounded">
+      <option value="">Stage</option>
+      <option>Idea</option>
+      <option>Development</option>
+      <option>Testing</option>
+      <option>Completed</option>
+    </select>
+
+    <input id="pYear" placeholder="Year" class="w-full border p-3 rounded">
+    <input id="pPassword" type="password" placeholder="Edit Password" class="w-full border p-3 rounded">
+
+    <div class="flex justify-end gap-4">
+      <button onclick="closeModal()" class="px-4 py-2 border rounded">Cancel</button>
+      <button onclick="saveProject()" class="bg-indigo-600 text-white px-6 py-2 rounded">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- FIREBASE + AI -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+   apiKey: "FIREBASE API KEY",
+  authDomain: "OUR AUTH DOMAIN",
+  projectId: "PROJECT ID",
+  appId: "APP ID"
+};
+
+const db = getFirestore(app);
+
+const container = document.getElementById("projectsContainer");
+const searchInput = document.getElementById("searchInput");
+
+const pUSN = document.getElementById("pUSN");
+const pTitle = document.getElementById("pTitle");
+const pDesc = document.getElementById("pDesc");
+const pDemo = document.getElementById("pDemo");
+const pReportLink = document.getElementById("pReportLink");
+const pDept = document.getElementById("pDept");
+const pType = document.getElementById("pType");
+const pStage = document.getElementById("pStage");
+const pYear = document.getElementById("pYear");
+const pPassword = document.getElementById("pPassword");
+
+let allProjects = [];
+
+window.openModal = () => document.getElementById("projectModal").classList.remove("hidden");
+window.closeModal = () => document.getElementById("projectModal").classList.add("hidden");
+
+/* ===================== LOAD PROJECTS ===================== */
+async function loadProjects() {
+  container.innerHTML = "";
+  allProjects = [];
+
+  const snap = await getDocs(collection(db, "Users", "Projects", "items"));
+  snap.forEach(d => {
+    allProjects.push({ id: d.id, ...d.data() });
+  });
+
+  renderProjects(allProjects);
+}
+
+/* ===================== RENDER PROJECTS ===================== */
+function renderProjects(list) {
+  container.innerHTML = "";
+  list.forEach(p => {
+    container.innerHTML += `
+      <div class="bg-white rounded-2xl shadow p-6 flex gap-6">
+        <img src="pro${p.imageIndex || 1}.jpg" class="w-40 h-28 object-cover rounded-lg border" onerror="this.src='pro1.jpg'">
+        <div class="flex-1">
+          <h3 class="text-2xl font-bold">${p.title}</h3>
+          <p class="text-gray-600 mt-2">${p.description}</p>
+
+          <div class="flex gap-4 mt-4">
+            ${p.demoLink ? `<a href="${p.demoLink}" target="_blank" class="bg-indigo-600 text-white px-4 py-1 rounded hover:bg-indigo-700">🔗 Demo</a>` : ""}
+            ${p.reportLink ? `<a href="${p.reportLink}" target="_blank" class="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700">📄 Report</a>` : ""}
+          </div>
+
+          <div class="mt-4">
+            <p class="text-sm font-semibold text-gray-700">AI Extracted Keywords:</p>
+            <div class="flex flex-wrap gap-2 mt-2">
+              ${(p.keywords || []).length
+                ? p.keywords.map(k => `<span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs">${k}</span>`).join("")
+                : `<span class="text-gray-400 text-xs">Processing...</span>`}
+            </div>
+          </div>
+
+          <p class="text-sm text-gray-500 mt-3">
+            USN: ${p.id} | ${p.department} | ${p.type} | ${p.stage} | ${p.year}
+          </p>
+
+          ${p.reportLink ? `<p class="mt-2"><a href="${p.reportLink}" target="_blank" class="text-blue-600 underline">View Project Report</a></p>` : ""}
+        </div>
+      </div>
+    `;
+  });
+}
+
+/* ===================== SEARCH FUNCTION ===================== */
+searchInput.addEventListener("input", () => {
+  const q = searchInput.value.toLowerCase();
+  const filtered = allProjects.filter(p =>
+    p.title?.toLowerCase().includes(q) ||
+    p.description?.toLowerCase().includes(q) ||
+    p.department?.toLowerCase().includes(q) ||
+    (p.keywords || []).join(" ").toLowerCase().includes(q)
+  );
+  renderProjects(filtered);
+});
+
+/* ===================== SAVE PROJECT ===================== */
+async function saveProject() {
+  if (!pUSN.value) return alert("USN required");
+
+  await setDoc(doc(db, "Users", "Projects", "items", pUSN.value), {
+    title: pTitle.value,
+    description: pDesc.value,
+    department: pDept.value,
+    type: pType.value,
+    stage: pStage.value,
+    year: pYear.value,
+    demoLink: pDemo.value,
+    reportLink: pReportLink.value,
+    password: pPassword.value,
+    imageIndex: Math.floor(Math.random() * 4) + 1
+  }, { merge: true });
+
+  closeModal();
+  loadProjects();
+}
+
+loadProjects();
+const storedUserName = localStorage.getItem("userName");
+if (storedUserName) document.getElementById("userName").innerText = storedUserName;
+
+</script>
+
+</body>
+</html>

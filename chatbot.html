@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BuddyAI</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{font-family:'Inter',sans-serif;background:#f3f4f6}</style>
+</head>
+<body>
+
+<div class="flex h-screen">
+
+<!-- SIDEBAR (same) -->
+<aside class="w-64 bg-gray-900 text-white flex flex-col">
+    <div class="h-20 flex items-center justify-center border-b border-gray-700">
+      <i class="fas fa-graduation-cap text-2xl text-indigo-400 mr-3"></i>
+      <h1 class="text-xl font-bold">VertexMind</h1>
+    </div>
+
+    <p class="text-xs text-gray-400 text-center px-4 mt-2">
+     VertexMind The Smart Campus AI Platform
+    </p>
+
+    <nav class="flex-1 px-4 py-6 space-y-2">
+
+      <a href="index.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-home w-6 mr-3"></i> Dashboard
+      </a>
+
+      <a href="ai-assistant.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-book-open w-6 mr-3"></i> AI Academic Assistant
+      </a>
+
+      <a href="chatbot.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-robot w-6 mr-3"></i> BuddyAI
+      </a>
+
+      <a href="events.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-calendar-check w-6 mr-3"></i> Event Management
+      </a>
+
+      <a href="attendance.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-face-smile w-6 mr-3"></i> Facial Attendance
+      </a>
+
+      <a href="projects.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+        <i class="fas fa-diagram-project w-6 mr-3"></i> Project Repository
+      </a>
+      <a href="campus-navigation.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+          <i class="fas fa-user-shield w-6 mr-3"></i> Campus navigation
+        </a>
+
+      <div class="pt-4 mt-4 border-t border-gray-700 space-y-2">
+        <a href="profile.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+          <i class="fas fa-user w-6 mr-3"></i> Profile
+        </a>
+
+        <a href="admin.html" class="nav-link flex items-center px-4 py-3 rounded-lg">
+          <i class="fas fa-user-shield w-6 mr-3"></i> Admin Panel
+        </a>
+      </div>
+
+    </nav>
+  </aside>
+<!-- CONTENT -->
+<div class="flex-1 flex flex-col">
+<header class="h-20 bg-white border-b shadow-sm px-8 flex items-center justify-between">
+  <h2 class="text-2xl font-bold">Responsible AI Chatbot</h2>
+
+  <div class="flex items-center gap-6">
+<span class="text-sm text-gray-500">
+  Welcome, <span id="userName">User</span>
+</span>
+
+
+    <button onclick="logout()"
+      class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
+      <i class="fas fa-sign-out-alt"></i>
+      Logout
+    </button>
+  </div>
+</header>
+
+
+<main class="flex-1 p-8">
+<div class="bg-white p-6 rounded-3xl shadow h-[70vh] flex flex-col">
+<div id="chat" class="flex-1 overflow-y-auto bg-gray-100 p-4 rounded-lg mb-4"></div>
+<div class="flex gap-2">
+<input id="msg" class="flex-1 border p-3 rounded-lg" placeholder="Ask your question...">
+<button onclick="send()" class="bg-indigo-600 text-white px-6 rounded-lg">Send</button>
+</div>
+</div>
+</main>
+
+<footer class="bg-white text-center p-3 text-sm text-gray-500 border-t">
+© VertexMind The Smart Campus AI Platform
+</footer>
+</div>
+</div>
+
+<script>
+/* ===============================
+   CONFIG (CHEAPEST SETTINGS)
+================================ */
+const API_KEY = "AIzaSyBEufZ1WrBKK09KnHVnpxsYL7aV1RR1Mjg";
+const MODEL = "gemini-2.5-flash-lite";
+const MAX_OUTPUT_TOKENS = 150;
+
+/* ===============================
+   SYSTEM CONTEXT (VERY SHORT)
+   Keeps token usage LOW
+================================ */
+const SYSTEM_PROMPT = `
+You are an AI assistant for GSSS IETW Engineering College.
+Answer questions about:
+- College information
+- Departments, academics, exams
+- Rules and regulations
+- Student guidance and general queries
+Be polite, clear, and concise.
+If unsure, say you don't have exact information.
+`;
+
+/* ===============================
+   CHAT FUNCTION
+================================ */
+async function send() {
+  const chat = document.getElementById("chat");
+  const input = document.getElementById("msg");
+  const message = input.value.trim();
+  if (!message) return;
+
+  chat.innerHTML += `
+    <div class="mb-2">
+      <span class="font-semibold text-indigo-600">${userName}:</span>
+      <span>${message}</span>
+    </div>
+  `;
+  chat.scrollTop = chat.scrollHeight;
+  input.value = "";
+
+  const typingId = "typing-" + Date.now();
+  chat.innerHTML += `
+    <div id="${typingId}" class="mb-2 text-gray-500">
+      <span class="font-semibold">AI:</span> typing...
+    </div>
+  `;
+  chat.scrollTop = chat.scrollHeight;
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1/models/${MODEL}:generateContent?key=${API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
+           {
+  role: "user",
+  parts: [{
+    text:
+      SYSTEM_PROMPT +
+      `\n\nThe student's name is ${userName}.` +
+      `\nThe student asks: ${message}`
+  }]
+}
+
+          ],
+          generationConfig: {
+            temperature: 0.2,
+            maxOutputTokens: MAX_OUTPUT_TOKENS
+          }
+        })
+      }
+    );
+
+    const data = await res.json();
+    document.getElementById(typingId).remove();
+
+    const reply =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "I couldn't generate a response.";
+
+    chat.innerHTML += `
+      <div class="mb-4">
+        <span class="font-semibold text-green-600">AI:</span>
+        <span>${reply}</span>
+      </div>
+    `;
+    chat.scrollTop = chat.scrollHeight;
+
+  } catch (err) {
+    document.getElementById(typingId).remove();
+    chat.innerHTML += `
+      <div class="text-red-600 mb-2">
+        <b>AI:</b> Error connecting to server.
+      </div>
+    `;
+    console.error(err);
+  }
+}
+
+/* ===============================
+   NAV ACTIVE STATE
+================================ */
+document.querySelectorAll(".nav-link").forEach(link => {
+  link.getAttribute("href") === location.pathname.split("/").pop()
+    ? link.classList.add("bg-indigo-600", "text-white")
+    : link.classList.add("hover:bg-gray-700");
+});
+
+/* ===============================
+   LOGOUT
+================================ */
+function logout() {
+  localStorage.clear();
+  window.location.href = "auth.html";
+}
+
+/* ===============================
+   ENTER KEY SUPPORT
+================================ */
+document.getElementById("msg").addEventListener("keydown", e => {
+  if (e.key === "Enter") send();
+});
+/* ===============================
+   USER NAME
+================================ */
+/* ===============================
+   USER NAME (GLOBAL)
+================================ */
+const userName = localStorage.getItem("userName") || "User";
+
+const userNameElement = document.getElementById("userName");
+if (userNameElement) {
+  userNameElement.innerText = userName;
+}
+
+</script>
+
+</body>
+</html>

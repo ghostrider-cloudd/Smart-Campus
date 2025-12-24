@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Campus Navigation</title>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet"
+ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+body{
+  margin:0;
+  font-family:Segoe UI, sans-serif;
+}
+
+/* ===== SPLIT SCREEN ===== */
+.container{
+  display:flex;
+  width:100vw;
+  height:100vh;
+}
+
+/* ===== LEFT : OUTDOOR ===== */
+#outdoor{
+  width:50%;
+  height:100%;
+}
+#leafletMap{
+  width:100%;
+  height:90%;
+}
+
+/* ===== RIGHT : INDOOR (UNCHANGED STYLE) ===== */
+#indoor{
+  width:50%;
+  background:#0b1220;
+  color:white;
+}
+h2,h3{text-align:center;margin:10px;}
+.controls{text-align:center;margin-bottom:10px;}
+input,button{
+  padding:8px 12px;
+  border-radius:6px;
+  border:none;
+}
+button{background:#2563eb;color:white;cursor:pointer;}
+.note{text-align:center;font-size:13px;color:#c7d2fe;}
+canvas{
+  display:block;
+  margin:auto;
+  background:#020617;
+  border-radius:14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- ================= LEFT : OUTDOOR MAP ================= -->
+<div id="outdoor">
+  <h3>Campus Navigation (Outdoor)</h3>
+  <div id="leafletMap"></div>
+</div>
+
+<!-- ================= RIGHT : INDOOR MAP ================= -->
+<div id="indoor">
+
+<h2>GSSS Institute of Engineering – Smart Campus Navigation</h2>
+
+<div class="controls">
+  <input id="dest" placeholder="Enter destination (101 / washroom / library)">
+  <button onclick="startNav()">Navigate</button>
+  <button onclick="resetNav()">Reset</button>
+</div>
+
+<div class="note">👉 Click a node to set your current location</div>
+
+<canvas id="indoorMap" width="1100" height="620"></canvas>
+
+</div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+/* =====================================================
+   OUTDOOR MAP — UNCHANGED
+===================================================== */
+const viewportCoords = [
+      [12.361814, 76.627257],
+      [12.362664, 76.630121],
+      [12.360648, 76.631320],
+      [12.360389, 76.629984],
+      [12.361220, 76.628515],
+      [12.360858, 76.627481]
+    ];
+const viewportBounds=L.latLngBounds(viewportCoords);
+
+const map=L.map("leafletMap",{
+ maxBounds:viewportBounds,
+ maxBoundsViscosity:1,
+ minZoom:18,
+ maxZoom:20
+});
+
+L.tileLayer(
+ "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+ {maxZoom:20}
+).addTo(map);
+
+map.fitBounds(viewportBounds);
+
+const userLocation=[12.360964,76.627473];
+L.marker(userLocation).addTo(map).bindPopup("You are Here");
+
+/* =====================================================
+   INDOOR MAP — YOUR CODE (LOGIC UNCHANGED)
+===================================================== */
+const canvas=document.getElementById("indoorMap");
+const ctx=canvas.getContext("2d");
+
+/* ================== NODES ================== */
+    const nodes={
+    gate:{x:120,y:310,name:"Gate"},
+    lobby:{x:360,y:310,name:"Lobby"},
+    junction:{x:560,y:310,name:"Junction"},
+
+    pdept:{x:760,y:180,name:"Placement Dept"},
+    r102:{x:900,y:180,name:"Room 102"},
+    r103:{x:1040,y:180,name:"Room 103"},
+    wash:{x:900,y:260,name:"Washroom"},
+
+    r107:{x:760,y:440,name:"Room 107"},
+    r108:{x:900,y:440,name:"Room 108"},
+    ece:{x:1040,y:440,name:"ECE Dept"},
+    library:{x:900,y:520,name:"Library"}
+    };
+
+/* ================== EDGES ================== */
+const edges=[
+ ["gate","lobby"],["lobby","junction"],
+ ["junction","pdept"],["pdept","r102"],["r102","r103"],["r102","wash"],
+ ["junction","r107"],["r107","r108"],["r108","ece"],["r108","library"]
+];
+
+/* ================== STATE ================== */
+let user={x:nodes.gate.x,y:nodes.gate.y,node:"gate"};
+let path=[],seg=0,spoken=false;
+
+/* ================== VOICE ================== */
+let speaking=false;
+function speak(text){
+ if(speaking) return;
+ const u=new SpeechSynthesisUtterance(text);
+ u.rate=0.9;u.pitch=1.05;
+ speaking=true;
+ u.onend=()=>speaking=false;
+ speechSynthesis.speak(u);
+}
+
+/* ================== DRAW ================== */
+function draw(){
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+
+ edges.forEach(([a,b])=>{
+  ctx.strokeStyle="#38bdf8";
+  ctx.lineWidth=6;
+  ctx.beginPath();
+  ctx.moveTo(nodes[a].x,nodes[a].y);
+  ctx.lineTo(nodes[b].x,nodes[b].y);
+  ctx.stroke();
+ });
+
+ for(const id in nodes){
+  const n=nodes[id];
+  ctx.fillStyle="#1e40af";
+  ctx.beginPath();
+  ctx.arc(n.x,n.y,22,0,Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle="#93c5fd";ctx.lineWidth=3;ctx.stroke();
+  ctx.fillStyle="white";
+  ctx.font="12px Segoe UI";
+  ctx.textAlign="center";
+  ctx.fillText(n.name,n.x,n.y-28);
+ }
+
+ ctx.fillStyle="lime";
+ ctx.beginPath();
+ ctx.arc(user.x,user.y,10,0,Math.PI*2);
+ ctx.fill();
+
+ if(path.length&&seg<path.length-1){
+  const A=nodes[path[seg]],B=nodes[path[seg+1]];
+  const ang=Math.atan2(B.y-A.y,B.x-A.x);
+  ctx.save();
+  ctx.translate(user.x,user.y);
+  ctx.rotate(ang);
+  ctx.fillStyle="yellow";
+  ctx.beginPath();
+  ctx.moveTo(0,0);ctx.lineTo(-10,-5);ctx.lineTo(-10,5);
+  ctx.closePath();ctx.fill();
+  ctx.restore();
+ }
+}
+
+/* ================== A* ================== */
+function h(a,b){
+ return Math.hypot(nodes[a].x-nodes[b].x,nodes[a].y-nodes[b].y);
+}
+function astar(start,end){
+ const open=[start],came={},g={[start]:0},f={[start]:h(start,end)};
+ while(open.length){
+  open.sort((a,b)=>f[a]-f[b]);
+  const cur=open.shift();
+  if(cur===end) break;
+  edges.forEach(([a,b])=>{
+   const n=a===cur?b:b===cur?a:null;
+   if(!n) return;
+   const tg=g[cur]+h(cur,n);
+   if(g[n]==null||tg<g[n]){
+    came[n]=cur;g[n]=tg;f[n]=tg+h(n,end);
+    if(!open.includes(n)) open.push(n);
+   }
+  });
+ }
+ const p=[];let c=end;
+ while(c){p.unshift(c);c=came[c];}
+ return p;
+}
+
+/* ================== MOVE ================== */
+function direction(a,b){
+ const dx=nodes[b].x-nodes[a].x;
+ return dx>0?"Take right":"Take left";
+}
+function move(){
+ if(seg>=path.length-1){
+  speak("You have reached your destination");
+  return;
+ }
+ const A=nodes[path[seg]],B=nodes[path[seg+1]];
+ const dx=B.x-user.x,dy=B.y-user.y;
+ const d=Math.hypot(dx,dy),speed=2;
+
+ if(!spoken){
+  speak(`${direction(path[seg],path[seg+1])}`);
+  spoken=true;
+ }
+
+ if(d<=speed){
+  user.x=B.x;user.y=B.y;user.node=path[++seg];
+  spoken=false;
+ }else{
+  user.x+=dx/d*speed;user.y+=dy/d*speed;
+ }
+ draw();requestAnimationFrame(move);
+}
+
+/* ================== NAV ================== */
+function startNav(){
+ let d=document.getElementById("dest").value.toLowerCase().trim();
+ for(const k in nodes)
+  if(nodes[k].name.toLowerCase().includes(d)||k===d) d=k;
+ if(!nodes[d]){alert("Invalid destination");return;}
+ path=astar(user.node,d);seg=0;spoken=false;
+ speak(`Starting navigation to ${nodes[d].name}`);
+ move();
+}
+function resetNav(){
+ speechSynthesis.cancel();
+ user={x:nodes.gate.x,y:nodes.gate.y,node:"gate"};
+ path=[];seg=0;spoken=false;
+ draw();
+}
+
+/* ================== CLICK ================== */
+canvas.onclick=e=>{
+ const r=canvas.getBoundingClientRect();
+ const x=e.clientX-r.left,y=e.clientY-r.top;
+ let best=null,min=1e9;
+ for(const id in nodes){
+  const d=Math.hypot(x-nodes[id].x,y-nodes[id].y);
+  if(d<min){min=d;best=id;}
+ }
+ user={x:nodes[best].x,y:nodes[best].y,node:best};
+ speak(`Current location set to ${nodes[best].name}`);
+ draw();
+};
+
+draw();
+</script>
+
+</body>
+</html>
